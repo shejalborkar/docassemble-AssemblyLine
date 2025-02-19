@@ -1,0 +1,48 @@
+import json
+from tabulate import tabulate
+
+def simplify_json(data):
+    """
+    Simplifies the JSON output by removing unimportant attributes and summarizing ALPeopleList and person objects.
+    """
+    simplified_data = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            # Handle person objects
+            simplified_data[key] = {k: v for k, v in value.items() if k in ['name', 'age', 'email']}
+        elif isinstance(value, list) and all(isinstance(item, dict) for item in value):
+            # Handle ALPeopleList
+            simplified_data[key] = [{k: v for k, v in item.items() if k in ['name', 'age', 'email']} for item in value]
+        else:
+            simplified_data[key] = value
+    return simplified_data
+
+def create_summary_table(data):
+    """
+    Creates a summary table from the simplified JSON data.
+    """
+    simplified_data = simplify_json(data)
+    table_data = []
+    for key, value in simplified_data.items():
+        if isinstance(value, list):
+            for item in value:
+                table_data.append([key, json.dumps(item)])
+        else:
+            table_data.append([key, json.dumps(value)])
+    
+    table = tabulate(table_data, headers=["Variable Name", "Value"], tablefmt="grid")
+    return table
+
+# Example usage
+all_variables_output = {
+    "person1": {"name": "John Doe", "age": 30, "email": "john@example.com", "address": "123 Main St"},
+    "person2": {"name": "Jane Smith", "age": 25, "email": "jane@example.com", "phone": "555-1234"},
+    "ALPeopleList": [
+        {"name": "Alice", "age": 28, "email": "alice@example.com", "address": "456 Elm St"},
+        {"name": "Bob", "age": 35, "email": "bob@example.com", "phone": "555-5678"}
+    ],
+    "other_variable": "Some value"
+}
+
+summary_table = create_summary_table(all_variables_output)
+print(summary_table)
